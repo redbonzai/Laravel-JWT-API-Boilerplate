@@ -1,0 +1,30 @@
+<?php
+
+namespace App;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Posts extends Model
+{
+    protected $fillable = [
+        'user_id',
+        'title',
+        'content',
+        'published'
+    ];
+
+    public function user()
+    {
+        return $this->belongsTo('App\User');
+    }
+
+    public function comments()
+    {
+        return $this->hasMany('App\Comments');
+    }
+
+    public function likes()
+    {
+        return $this->hasMany('App\Likes');
+    }
+}
