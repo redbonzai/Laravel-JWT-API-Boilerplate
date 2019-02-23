@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -15,16 +15,16 @@ class Likes extends Model
 
     public function user()
     {
-        return $this->belongsTo('App\User');
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     public function post()
     {
-        return $this->belongsTo('App\Posts');
+        return $this->belongsTo(Posts::class, 'posts_id', 'id');
     }
 
     public function comment()
     {
-        return $this->belongsTo('App\Comments');
+        return $this->belongsTo(Comments::class, 'comments_id', 'id');
     }
 }
