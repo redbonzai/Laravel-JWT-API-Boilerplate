@@ -14,32 +14,37 @@ use Illuminate\Http\Request;
 */
 
 // Login and registration
-Route::post('login', 'API\UserController@login');
-Route::post('register', 'API\UserController@register');
+$this->group(['prefix' => 'auth'], function () {
+    $this->post('/register', 'API\UserController@register');
+    $this->post('/login', 'API\UserController@login');
+});
 
+$this->group(['prefix' => 'blog', 'middleware' => ['jwt.verify']], function () {
+    $this->resource('/posts', 'API\PostsController');
+    /*$this->get('/post/{posts_id}', 'PostsController@show');
+    $this->get('/comments/{post_id}', 'CommentsController@index');
+    $this->get('likes/{posts_id}', 'PostsController@likes');*/
+});
 // Public posts, comments, and likes
-Route::get('/posts', 'PostsController@index');
-Route::get('/post/{posts_id}', 'PostsController@show');
-Route::get('/comments/{post_id}', 'CommentsController@index');
-Route::get('likes/{posts_id}', 'PostsController@likes');
 
 
-Route::group(['middleware' => 'auth:api'], function() {
+
+/*$this->group(['middleware' => 'auth:api'], function() {
     
     // User details
-    Route::post('details', 'API\UserController@details');
+    $this->post('details', 'API\UserController@details');
 
     // Posts
-    Route::post('post', 'PostsController@store');
-    Route::post('post/{posts_id}', 'PostsController@update');
-    Route::delete('post/{posts_id}', 'PostsController@destroy');
+    $this->post('post', 'PostsController@store');
+    $this->post('post/{posts_id}', 'PostsController@update');
+    $this->delete('post/{posts_id}', 'PostsController@destroy');
 
     // Comments
-    Route::post('comment', 'CommentsController@store');
-    Route::post('comment/{comments_id}', 'CommentsController@store');
-    Route::delete('comment/{comments_id}', 'CommentsController@destroy');
+    $this->post('comment', 'CommentsController@store');
+    $this->post('comment/{comments_id}', 'CommentsController@store');
+    $this->delete('comment/{comments_id}', 'CommentsController@destroy');
 
     // Likes
-    Route::post('/like/post/{posts_id}', 'PostsController@like');
-    Route::post('/like/comment/{comments_id}', 'CommentsController@like');
-});
+    $this->post('/like/post/{posts_id}', 'PostsController@like');
+    $this->post('/like/comment/{comments_id}', 'CommentsController@like');
+});*/

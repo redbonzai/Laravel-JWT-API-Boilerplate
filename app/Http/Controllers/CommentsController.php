@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Comments;
-use App\Likes;
+use App\Models\Comments;
+use App\Models\Likes;
 use Illuminate\Http\Request;
 
 class CommentsController extends Controller
@@ -25,7 +25,7 @@ class CommentsController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \App\Comments
+     * @return \App\Models\Comments
      */
     public function store(Request $request)
     {
@@ -87,8 +87,8 @@ class CommentsController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Comments  $comments
-     * @return \App\Comments
+     * @param  \App\Models\Comments  $comments
+     * @return \App\Models\Comments
      */
     public function update(Request $request, Comments $comments)
     {
@@ -106,8 +106,8 @@ class CommentsController extends Controller
      * Like or unlike the specified resource
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Comments  $comments
-     * @return \App\Comments
+     * @param  \App\Models\Comments  $comments
+     * @return \App\Models\Comments
      */
     public function like(Request $request, Comments $comments)
     {
@@ -152,7 +152,7 @@ class CommentsController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Comments  $comments
+     * @param  \App\Models\Comments  $comments
      * @return \Illuminate\Http\Response
      */
     public function destroy(Comments $comments)

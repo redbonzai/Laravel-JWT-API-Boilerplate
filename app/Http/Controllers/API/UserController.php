@@ -2,39 +2,44 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Services\AuthService;
+use App\Traits\ApiResponder;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Http\Request;
-use App\User;
-
 
 class UserController extends Controller
 {
+    use ApiResponder;
+
     public $successStatus = 200;
 
-    /**
-     * login api
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function login()
+    /** @var AuthService $auth */
+    protected $auth;
+
+    public function __construct(AuthService $auth)
     {
-        if(Auth::attempt(['email' => request('email'), 'password' => request('password')])){
-            $user = Auth::user();
-            $success['token'] =  $user->createToken('reddnot')->accessToken;
-            return response()->json(['success' => $success], $this->successStatus);
-        }
-        else{
-            return response()->json(['error'=>'Unauthorised'], 401);
-        }
+        $this->auth = $auth;
     }
 
     /**
-     * Register api
-     *
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function login(Request $request)
+    {
+        $response = $this->auth->login($request);
+
+       // $this->recordJwtToken($response);
+        return $this->successResponse(
+            $this->auth->login($request)
+        );
+    }
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function register(Request $request)
     {
@@ -48,21 +53,15 @@ class UserController extends Controller
 
         // Validation fails
         if ($validator->fails()) {
-            return response()->json(['error'=>$validator->errors()], 401);            
+            return $this->errorResponse(
+                $validator->errors()->getMessages(),
+                401
+            );
         }
 
-        // Create a new user
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password)
-        ]);
-        
-        // Return tokens
-        $success['token'] = $user->createToken('reddnot')->accessToken;
-        $success['name'] = $user->name;
-
-        return response()->json(['success'=>$success], $this->successStatus);
+        return $this->successResponse(
+            $this->auth->register($request)
+        );
     }
 
     /**
