@@ -1,14 +1,14 @@
 <?php
 
-namespace App;
+namespace App\Models;
 
-use Laravel\Passport\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
-    use HasApiTokens, Notifiable;
+    use Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -37,18 +37,28 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
+    }
+
     public function posts()
     {
-        return $this->hasMany('App\Posts');
+        return $this->hasMany(Posts::class, 'user_id', 'id');
     }
 
     public function comments()
     {
-        return $this->hasMany('App\Comments');
+        return $this->hasMany(Comments::class, 'user_id', 'id');
     }
 
     public function likes()
     {
-        return $this->hasMany('App\Likes');
+        return $this->hasMany(Likes::class, 'user_id', 'id');
     }
 }

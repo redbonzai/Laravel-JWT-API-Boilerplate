@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -15,16 +15,16 @@ class Posts extends Model
 
     public function user()
     {
-        return $this->belongsTo('App\User');
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     public function comments()
     {
-        return $this->hasMany('App\Comments');
+        return $this->hasMany(Comments::class, 'posts_id', 'id');
     }
 
     public function likes()
     {
-        return $this->hasMany('App\Likes');
+        return $this->hasMany(Likes::class, 'posts_id', 'id');
     }
 }
