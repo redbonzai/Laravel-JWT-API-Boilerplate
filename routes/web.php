@@ -11,7 +11,7 @@
 |
 */
 
-Route::get('/', 'PublicController@index');
-Route::get("/register", "PublicController@register");
-Route::get('/post/{posts_id}', 'PublicController@post');
-Route::get('/post/create', 'PublicController@create');
+Route::get('/', function () {
+    return 'amazing api';
+});
+
