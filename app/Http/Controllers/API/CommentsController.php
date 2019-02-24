@@ -3,159 +3,192 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\CommentResource;
 use App\Models\Comments;
 use App\Models\Likes;
+use App\Models\Posts;
+use App\Traits\ApiResponder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class CommentsController extends Controller
 {
+    use ApiResponder;
+
     /**
-     * Display a listing of the resource.
-     *
-     * @param  integer  $post_id
-     * @return \Illuminate\Http\Response
+     * Display all comments
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function index(int $post_id)
+    public function index ()
     {
-        return Comments::where('posts_id', $post_id)
-                       ->orderBy('created_at', 'desc')
-                       ->get();
+        try {
+            $user = auth()->user();
+
+        } catch (\Tymon\JWTAuth\Exceptions\UserNotDefinedException $e) {
+            Log::error('cannot verify user authentication', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'code' => $e->getCode(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return $this->errorResponse($e->getTraceAsString(), 401);
+        }
+
+        return $this->successResponse(
+            CommentResource::collection(Comments::with('user')->paginate(25))
+        );
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \App\Models\Comments
+     * Display a specific comment
+     * @param Comments $comment
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function show(Comments $comment)
+    {
+        return $this->successResponse(new CommentResource($comment));
+    }
+
+    /**
+     * Get all comments from a given post ID
+     * @param $post
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getCommentsByPostId($post)
+    {
+        $comments = Comments::where('posts_id', '=', $post)->get();
+        return $this->successResponse($comments);
+
+    }
+
+    /**
+     * Store a new comment on a post
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
     {
         $request->validate([
-            'post_id' => 'required|numeric',
+            'posts_id' => 'required|numeric',
             'content' => 'required|string'
         ]);
 
-        if ($this->isConsecutiveComment($request->post_id)) {
-            return json_encode([
-                'success' => 'error', 
-                'message' => 'Consecutive posts are not allowed.'
-            ]);
+        if ($this->isConsecutiveComment($request->posts_id)) {
+            return $this->errorResponse('Consecutive posts are not allowed', 401);
         }
 
-        if ($this->isSelfReply($request->post_id, $request->reply_to)) {
-            return json_encode([
-                'success' => 'error', 
-                'message' => 'You can not reply to your own comment.'
-            ]);
+        if ($this->isSelfReply($request->posts_id, $request->reply_to)) {
+            return $this->errorResponse('You can not reply to your own comment.', 401);
         }
 
         $comment = Comments::create([
             'user_id' => auth()->user()->id,
-            'posts_id' => $request->post_id,
-            'content' => $request->content,
-            'reply_to' => $request->reply_to ?? 0
+            'posts_id' => $request->get('posts_id'),
+            'content' => $request->get('content'),
+            'reply_to' => $request->get('reply_to') ?? 0
         ]);
 
-        return $comment;
+        return $this->successResponse(new CommentResource($comment));
     }
 
-    /*
+    /**
      * Checks for consecutive posts
-     * 
-     * @param   integer  $post_id
-     * @return  bool
+     * @param int $post_id
+     * @return bool
      */
     private function isConsecutiveComment(int $post_id)
     {
         $comment = Comments::orderBy('created_at', 'desc')->first();
-        return ($comment->user_id == auth()->user()->id) && ($comment->post_id == $post_id);
-    }
+        $consecutive = $comment
+            ? ($comment->user_id == auth()->user()->id) && ($comment->post_id == $post_id)
+            : false;
 
-    /*
-     * Checks for self replies
-     * 
-     * @param   integer  $post_id
-     * @param   integer  $reply_to
-     * @return  bool
-     */
-    private function isSelfReply(int $post_id, int $reply_to = 0)
-    {
-        $comment = Comments::find('id', $reply_to);
-        return ($comment->user_id == auth()->user()->id) && ($comment->post_id == $post_id);
+        return $consecutive;
     }
 
     /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Comments  $comments
-     * @return \App\Models\Comments
+     * Checks for self replies
+     * @param int $post_id
+     * @param int $reply_to
+     * @return bool
      */
-    public function update(Request $request, Comments $comments)
+    private function isSelfReply(int $post_id, int $reply_to = 0)
+    {
+        $comment = Comments::find($reply_to);
+        $selfReply = $comment
+            ? ($comment->user_id == auth()->user()->id) && ($comment->post_id == $post_id)
+            : false;
+        return $selfReply;
+    }
+
+    /**
+     * Update a specific comment
+     * @param Request $request
+     * @param Comments $comment
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function update(Request $request, Comments $comment)
     {
         $request->validate([
             'content' => 'required|string'
         ]);
 
-        $comments->content = $request->content;
-        $comments->save();
+        $update = $comment->update([
+            'content' => $request->get('content')
+        ]);
         
-        return $comments;
+        return $this->successResponse(['comment updated' =>$update]);
     }
 
     /**
-     * Like or unlike the specified resource
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Comments  $comments
-     * @return \App\Models\Comments
+     * Like or dislike a specified comment
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function like(Request $request, Comments $comments)
+    public function like(Request $request)
     {
         // Validate data
         $request->validate([
-            'post_id' => 'required|numeric',
-            'unlike' => 'required|numeric'
+            'comments_id' => 'required|numeric',
+            'dislike' => 'required|numeric'
         ]);
 
         // Update or create
         $like = Likes::updateOrCreate([
                 'user_id' => auth()->user()->id,
-                'posts_id' => $request->post_id,
-                'comments_id' => $comments->id
-        ],
-            [
-                'unlike' => $request->unlike
+                'posts_id' => null,
+                'comments_id' => $request->comments_id,
+                'dislike' => $request->dislike
         ]);
-        
-        return $like;
+
+        return $this->successResponse($like);
     }
 
     /**
-     * Get likes for a post
-     * 
-     * @param  integer  $post_id
-     * @returm array    [id => [likes, dislikes]]
+     * @param $commentId
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function likes(int $post_id)
+    public function likes($commentId)
     {
-        $comments = Comments::where('post_id', $post_id)->where('comments_id', ">", 0)->get();
-        foreach ($comments as $comment) {
-            $comment->likes = $post->likes()->where('comments_id', $comment->id)->where('dislike', 0)->count();
-            $comment->dislikes = $post->likes()->where('comments_id', $comment->id)->where('dislike', 1)->count();
-            ]
-        }
-        return ;
+        return $this->successResponse([
+            "likes" => Likes::where('comments_id', '=', $commentId)->where('dislike', '=', 0)->count(),
+            "dislikes" => Likes::where('comments_id', '=', $commentId)->where('dislike', '=', 1)->count()
+        ]);
     }
 
     /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Comments  $comments
-     * @return \Illuminate\Http\Response
+     * @param $commentId
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \Exception
      */
-    public function destroy(Comments $comments)
+    public function destroy($commentId)
     {
-        $comments->destroy();
+        /** @var Comments $comment */
+        $comment = Comments::findOrFail($commentId);
+        $comment->delete();
+
+        return $this->successResponse($comment);
     }
 }

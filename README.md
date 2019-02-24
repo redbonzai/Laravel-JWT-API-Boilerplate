@@ -5,6 +5,8 @@ vim /etc/hosts
 and enter : 
 127.0.0.1 amazing.test
 ```
+### Setup Docker or Vagrant, whatever you want. 
+
 ### Get the .env file
 ```bash
 cp env-example .env
