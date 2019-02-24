@@ -103,12 +103,11 @@ class PostsController extends Controller
     }
 
     /**
-     * Like or unlike the specified resource
+     * Like or unlike the specified Post
      * @param Request $request
-     * @param Posts $post
      * @return \Illuminate\Http\JsonResponse
      */
-    public function like(Request $request, Posts $post)
+    public function like(Request $request)
     {
         // Validate data
         $request->validate([
@@ -128,25 +127,29 @@ class PostsController extends Controller
     }
 
     /**
-     * @param Posts $post
+     * @param $postId
      * @return \Illuminate\Http\JsonResponse
      */
-    public function likes(Posts $post)
+    public function likes($postId)
     {
         return $this->successResponse([
-            "likes" => $post->likes()->where('comments_id', 0)->where('dislike', 0)->count(),
-            "dislikes" => $post->likes()->where('comments_id', 0)->where('dislike', 1)->count()
+            "likes" => Likes::where('posts_id', '=', $postId)->where('dislike', '=', 0)->count(),
+            "dislikes" => Likes::where('posts_id', '=', $postId)->where('dislike', '=', 1)->count()
         ]);
     }
 
     /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Posts $post
-     * @return \Illuminate\Http\Response
+     * Destroy a specific post
+     * @param $postId
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \Exception
      */
-    public function destroy(Posts $post)
+    public function destroy($postId)
     {
-        $post->destroy($post->id);
+        /** @var Posts $comment */
+        $post = Posts::findOrFail($postId);
+        $post->delete();
+
+        return $this->successResponse($post);
     }
 }

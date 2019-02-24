@@ -21,32 +21,11 @@ $this->group(['prefix' => 'auth'], function () {
 
 $this->group(['prefix' => 'blog', 'middleware' => ['jwt.verify']], function () {
     $this->resource('/posts', 'API\PostsController');
-    $this->get('/likes/{posts_id}', 'API\PostsController@likes');
-    $this->post('/like/{posts_id}', 'API\PostsController@like');
+    $this->get('/likes/post/{posts_id}', 'API\PostsController@likes');
+    $this->get('/likes/comment/{posts_id}', 'API\CommentsController@likes');
+    $this->post('/like/post/{posts_id}', 'API\PostsController@like');
+    $this->post('/like/comment/{comment_id}', 'API\CommentsController@like');
     $this->resource('/comments', 'API\CommentsController');
     $this->get('comments/posts/{posts_id}', 'API\CommentsController@getCommentsByPostId');
 
 });
-// Public posts, comments, and likes
-
-
-
-/*$this->group(['middleware' => 'auth:api'], function() {
-    
-    // User details
-    $this->post('details', 'API\UserController@details');
-
-    // Posts
-    $this->post('post', 'PostsController@store');
-    $this->post('post/{posts_id}', 'PostsController@update');
-    $this->delete('post/{posts_id}', 'PostsController@destroy');
-
-    // Comments
-    $this->post('comment', 'CommentsController@store');
-    $this->post('comment/{comments_id}', 'CommentsController@store');
-    $this->delete('comment/{comments_id}', 'CommentsController@destroy');
-
-    // Likes
-    $this->post('/like/post/{posts_id}', 'PostsController@like');
-    $this->post('/like/comment/{comments_id}', 'CommentsController@like');
-});*/

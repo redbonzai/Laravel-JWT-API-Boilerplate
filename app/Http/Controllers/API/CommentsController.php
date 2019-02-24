@@ -124,11 +124,10 @@ class CommentsController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Comments $comment
-     * @return \App\Models\Comments
+     * Update a specific comment
+     * @param Request $request
+     * @param Comments $comment
+     * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request, Comments $comment)
     {
@@ -136,65 +135,60 @@ class CommentsController extends Controller
             'content' => 'required|string'
         ]);
 
-        $comment->content = $request->content;
-        $comment->save();
+        $update = $comment->update([
+            'content' => $request->get('content')
+        ]);
         
-        return $comment;
+        return $this->successResponse(['comment updated' =>$update]);
     }
 
     /**
-     * Like or unlike the specified resource
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Comments  $comments
-     * @return \App\Models\Comments
+     * Like or dislike a specified comment
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function like(Request $request, Comments $comments)
+    public function like(Request $request)
     {
         // Validate data
         $request->validate([
-            'post_id' => 'required|numeric',
-            'unlike' => 'required|numeric'
+            'comments_id' => 'required|numeric',
+            'dislike' => 'required|numeric'
         ]);
 
         // Update or create
         $like = Likes::updateOrCreate([
                 'user_id' => auth()->user()->id,
-                'posts_id' => $request->post_id,
-                'comments_id' => $comments->id
-        ],
-            [
-                'unlike' => $request->unlike
+                'posts_id' => null,
+                'comments_id' => $request->comments_id,
+                'dislike' => $request->dislike
         ]);
-        
-        return $like;
+
+        return $this->successResponse($like);
     }
 
     /**
-     * Get likes for a post
-     * 
-     * @param  integer  $post_id
-     * @returm array    [id => [likes, dislikes]]
+     * @param $commentId
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function likes(int $post_id)
+    public function likes($commentId)
     {
-        $comments = Comments::where('post_id', $post_id)->where('comments_id', ">", 0)->get();
-        foreach ($comments as $comment) {
-            $comment->likes = $post->likes()->where('comments_id', $comment->id)->where('dislike', 0)->count();
-            $comment->dislikes = $post->likes()->where('comments_id', $comment->id)->where('dislike', 1)->count();
-
-        }
-        return ;
+        return $this->successResponse([
+            "likes" => Likes::where('comments_id', '=', $commentId)->where('dislike', '=', 0)->count(),
+            "dislikes" => Likes::where('comments_id', '=', $commentId)->where('dislike', '=', 1)->count()
+        ]);
     }
 
     /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Comments  $comments
-     * @return \Illuminate\Http\Response
+     * @param $commentId
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \Exception
      */
-    public function destroy(Comments $comments)
+    public function destroy($commentId)
     {
-        $comments->destroy($comments);
+        /** @var Comments $comment */
+        $comment = Comments::findOrFail($commentId);
+        $comment->delete();
+
+        return $this->successResponse($comment);
     }
 }
