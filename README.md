@@ -21,6 +21,4 @@ composer install
 npm install
 ```
 ### Postman environment
-[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/c06866384de9931ed73c)
-
-https://app.getpostman.com/join-team?invite_code=2fa66803fd68679faffad0db658ab8a1
+[![Run in Postman](https://run.pstmn.io/button.svg)](https://app.getpostman.com/run-collection/c06866384de9931ed73c#?env%5BAmazing%5D=W3sia2V5IjoiYmFzZVVybCIsInZhbHVlIjoiaHR0cDovL2FtYXppbmcudGVzdCIsImRlc2NyaXB0aW9uIjoiIiwidHlwZSI6InRleHQiLCJlbmFibGVkIjp0cnVlfV0=)
