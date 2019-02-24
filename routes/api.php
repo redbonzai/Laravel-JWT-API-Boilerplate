@@ -21,9 +21,10 @@ $this->group(['prefix' => 'auth'], function () {
 
 $this->group(['prefix' => 'blog', 'middleware' => ['jwt.verify']], function () {
     $this->resource('/posts', 'API\PostsController');
-    /*$this->get('/post/{posts_id}', 'PostsController@show');
+    $this->get('/likes/{posts_id}', 'API\PostsController@likes');
+    $this->post('/like/{posts_id}', 'API\PostsController@like');
+
     $this->get('/comments/{post_id}', 'CommentsController@index');
-    $this->get('likes/{posts_id}', 'PostsController@likes');*/
 });
 // Public posts, comments, and likes
 

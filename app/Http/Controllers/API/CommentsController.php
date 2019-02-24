@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\API;
 
+use App\Http\Controllers\Controller;
 use App\Models\Comments;
 use App\Models\Likes;
 use Illuminate\Http\Request;
@@ -119,14 +120,12 @@ class CommentsController extends Controller
 
         // Update or create
         $like = Likes::updateOrCreate([
-            [
                 'user_id' => auth()->user()->id,
                 'posts_id' => $request->post_id,
                 'comments_id' => $comments->id
-            ],
+        ],
             [
                 'unlike' => $request->unlike
-            ]
         ]);
         
         return $like;
