@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\CommentResource;
 use App\Models\Comments;
 use App\Models\Likes;
-use App\Models\Posts;
 use App\Traits\ApiResponder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;

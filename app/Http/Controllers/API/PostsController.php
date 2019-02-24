@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use App\Models\Likes;
 use App\Models\Posts;
 use Illuminate\Support\Facades\Log;
-use Tymon\JWTAuth\Facades\JWTAuth;
 
 class PostsController extends Controller
 {
