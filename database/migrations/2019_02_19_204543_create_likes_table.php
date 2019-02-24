@@ -18,7 +18,7 @@ class CreateLikesTable extends Migration
 
             $table->unsignedInteger('user_id');
             $table->unsignedInteger('posts_id');
-            $table->unsignedInteger('comments_id');
+            $table->unsignedInteger('comments_id')->nullable();
             
             $table->index(['user_id','posts_id']);
             $table->index(['user_id','comments_id']);

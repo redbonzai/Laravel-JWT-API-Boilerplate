@@ -88,15 +88,11 @@ class PostsController extends Controller
      */
     public function update(Request $request, Posts $post)
     {
-        //dd('request', $request);
-        // Validate the post data
-        /*$request->validate([
-            'title' => 'required|string|between:8,128',
-            'content' => 'required|string'
-        ]);*/
+        $request->validate([
+        'title' => 'required|string|between:8,128',
+        'content' => 'required|string'
+    ]);
 
-       // dd('post: ', $post->id);
-        //try {} catch ()
         $update = $post->update([
             'title' => $request->get('title'),
             'content' => $request->get('content'),
@@ -108,48 +104,40 @@ class PostsController extends Controller
 
     /**
      * Like or unlike the specified resource
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Posts $post
-     * @return \App\Models\Posts
+     * @param Request $request
+     * @param Posts $post
+     * @return \Illuminate\Http\JsonResponse
      */
     public function like(Request $request, Posts $post)
     {
         // Validate data
         $request->validate([
-            'post_id' => 'required|numeric',
-            'unlike' => 'required|numeric'
+            'posts_id' => 'required|numeric',
+            'dislike' => 'required|numeric'
         ]);
 
         // Update or create
         $like = Likes::updateOrCreate([
-            [
                 'user_id' => auth()->user()->id,
-                'posts_id' => $request->post_id,
-                'comments_id' => 0
-            ],
-            [
-                'unlike' => $request->unlike
-            ]
-        ]);
+                'posts_id' => $request->posts_id,
+                'comments_id' => null,
+                'dislike' => $request->dislike
+         ]);
         
-        return $like;
+        return $this->successResponse($like);
     }
 
     /**
-     * Get likes for a post
-     * 
      * @param Posts $post
-     * @return array [likes, dislikes]]
+     * @return \Illuminate\Http\JsonResponse
      */
     public function likes(Posts $post)
     {
-        return [
+        return $this->successResponse([
             "likes" => $post->likes()->where('comments_id', 0)->where('dislike', 0)->count(),
             "dislikes" => $post->likes()->where('comments_id', 0)->where('dislike', 1)->count()
-        ];
+        ]);
     }
-
 
     /**
      * Remove the specified resource from storage.
