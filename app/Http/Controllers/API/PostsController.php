@@ -145,7 +145,7 @@ class PostsController extends Controller
      */
     public function destroy($postId)
     {
-        /** @var Posts $comment */
+        /** @var Posts $post */
         $post = Posts::findOrFail($postId);
         $post->delete();
 
